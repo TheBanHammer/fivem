@@ -75,7 +75,7 @@
 	url = https://github.com/arangodb/linenoise-ng.git
 [submodule "vendor/discord-rpc"]
 	path = vendor/discord-rpc
-	url = https://github.com/discordapp/discord-rpc.git
+	url = https://github.com/citizenfx/discord-rpc.git
 [submodule "vendor/lz4"]
 	path = vendor/lz4
 	url = https://github.com/lz4/lz4.git
@@ -259,3 +259,6 @@
 [submodule "vendor/hdiffpatch"]
 	path = vendor/hdiffpatch
 	url = https://github.com/sisong/HDiffPatch.git
+[submodule "vendor/speexdsp"]
+	path = vendor/speexdsp
+	url = https://github.com/xiph/speexdsp.git

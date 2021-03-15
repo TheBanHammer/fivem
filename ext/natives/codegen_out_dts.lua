@@ -98,8 +98,8 @@ end
 local function printReturnType(type)
 	if type.nativeType == 'string' then
 		return 'string'
-	elseif type.nativeType == 'boolean' then
-		return 'bool'
+	elseif type.nativeType == 'bool' then
+		return 'boolean'
 	elseif type.nativeType == 'float' then
 		return 'number'
 	elseif type.nativeType == 'vector3' then
@@ -172,7 +172,7 @@ local function printArgument(argument, native)
 		argType = 'Function'
 	elseif argument.type.name == 'Hash' then
 		argType = 'string | number'
-	elseif argument.type.name == 'charPtr' then
+	elseif argument.type.nativeType == 'string' then
 		argType = 'string'
 	elseif argument.type.nativeType == 'int' then
 		argType = 'number'

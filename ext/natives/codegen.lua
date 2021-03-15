@@ -530,6 +530,11 @@ if #arg > 2 then
 	gApiSet = arg[3]
 end
 
+-- server has Player be charPtr, not int
+if gApiSet == 'server' then
+	types['Player'].nativeType = 'string'
+end
+
 loadDefinition 'inp/natives_cfx.lua'
 
 if not globalNatives then
@@ -549,5 +554,7 @@ end
 table.sort(_natives, function(a, b)
 	return a.name < b.name
 end)
+
+_G.gApiSet = gApiSet
 
 dofile('codegen_out_' .. outputType .. '.lua')

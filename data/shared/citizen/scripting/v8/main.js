@@ -492,17 +492,9 @@ const EXT_LOCALFUNCREF = 11;
 
 						return (...args) => {
 							try {
-								const result = exportsCallbackCache[resource][k](...args);
-
-								if (Array.isArray(result) && result.length === 1) {
-									return result[0];
-								}
-
-								return result;
+								return exportsCallbackCache[resource][k](...args);
 							} catch (e) {
-								//console.error(e);
-
-								throw new Error(`An error happened while calling export ${k} of resource ${resource} - see above for details`);
+								throw new Error(`An error occurred while calling export ${k} of resource ${resource} - see above for details`);
 							}
 						};
 					},
@@ -592,11 +584,7 @@ const EXT_LOCALFUNCREF = 11;
 	const playerTM = {
 		get(t, k) {
 			if (k === 'state') {
-				const pid = t.__data;
-
-				if (pid === -1) {
-					pid = GetPlayerServerId(PlayerId());
-				}
+				const pid = t.__data === -1 ? GetPlayerServerId(PlayerId()) : t.__data;
 
 				const es = `player:${pid}`;
 

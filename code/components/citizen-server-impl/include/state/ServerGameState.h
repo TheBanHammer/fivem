@@ -228,6 +228,7 @@ struct CVehicleGameStateNodeData
 {
 	uint16_t occupants[32];
 	eastl::bitset<32> playerOccupants;
+	uint16_t lastOccupant[32];
 	int radioStation;
 	bool isEngineOn;
 	bool isEngineStarting;
@@ -919,7 +920,7 @@ private:
 
 	void RemoveClone(const fx::ClientSharedPtr& client, uint16_t objectId, uint16_t uniqifier = 0);
 
-	void FinalizeClone(const fx::ClientSharedPtr& client, uint16_t objectId, uint16_t uniqifier = 0, std::string_view finalizeReason = "");
+	void FinalizeClone(const fx::ClientSharedPtr& client, const fx::sync::SyncEntityPtr& entity, uint16_t objectId, uint16_t uniqifier = 0, std::string_view finalizeReason = "");
 
 	void ParseClonePacket(const fx::ClientSharedPtr& client, net::Buffer& buffer);
 

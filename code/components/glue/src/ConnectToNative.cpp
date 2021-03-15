@@ -18,6 +18,7 @@
 #include <CoreConsole.h>
 #include <ICoreGameInit.h>
 #include <GameInit.h>
+#include <ScriptEngine.h>
 //New libs needed for saveSettings
 #include <fstream>
 #include <sstream>
@@ -224,7 +225,7 @@ static void ConnectTo(const std::string& hostnameStr, bool fromUI = false, const
 		switched = true;
 	}
 
-	if (!fromUI)
+	if (!fromUI && !launch::IsSDKGuest())
 	{
 		if (nui::HasMainUI())
 		{
@@ -456,6 +457,8 @@ static InitFunction initFunction([] ()
 			}
 #endif
 
+			console::Printf("no_console", "OnConnectionError: %s\n", error);
+
 			g_connected = false;
 
 			rapidjson::Document document;
@@ -473,6 +476,8 @@ static InitFunction initFunction([] ()
 
 		netLibrary->OnConnectionProgress.Connect([] (const std::string& message, int progress, int totalProgress)
 		{
+			console::Printf("no_console", "OnConnectionProgress: %s\n", message);
+
 			rapidjson::Document document;
 			document.SetObject();
 			document.AddMember("message", rapidjson::Value(message.c_str(), message.size(), document.GetAllocator()), document.GetAllocator());
@@ -511,6 +516,11 @@ static InitFunction initFunction([] ()
 			}
 
 			ep.Call("connectionError", std::string("Cards don't exist here yet!"));
+		});
+
+		netLibrary->OnStateChanged.Connect([](NetLibrary::ConnectionState currentState, NetLibrary::ConnectionState previousState)
+		{
+			ep.Call("connectionStateChanged", (int)currentState, (int)previousState);
 		});
 
 		static std::function<void()> finishConnectCb;
@@ -621,6 +631,19 @@ static InitFunction initFunction([] ()
 		g_connected = false;
 	});
 
+	if (launch::IsSDKGuest())
+	{
+		fx::ScriptEngine::RegisterNativeHandler("SEND_SDK_MESSAGE", [](fx::ScriptContext& context)
+		{
+			ep.Call("sdk:message", std::string(context.GetArgument<const char*>(0)));
+		});
+
+		console::CoreAddPrintListener([](ConsoleChannel channel, const char* msg)
+		{
+			ep.Call("sdk:consoleMessage", channel, std::string(msg));
+		});
+	}
+
 	static ConsoleCommand connectCommand("connect", [](const std::string& server)
 	{
 		ConnectTo(server);
@@ -681,6 +704,15 @@ static InitFunction initFunction([] ()
 		auto wnd = FindWindow(L"grcWindow", NULL);
 
 		SetWindowPos(wnd, NULL, 0, 0, w, h, SWP_NOZORDER | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS);
+	});
+
+	ep.Bind("sdk:invokeNative", [](const std::string& nativeType, const std::string& argumentData)
+	{
+		if (nativeType == "sendCommand")
+		{
+			se::ScopedPrincipal ps{ se::Principal{"system.console"} };
+			console::GetDefaultContext()->ExecuteSingleCommand(argumentData);
+		}
 	});
 
 	static ConsoleCommand disconnectCommand("disconnect", []()
@@ -851,7 +883,12 @@ static InitFunction initFunction([] ()
 		}
 		else if (!_wcsicmp(type, L"checkNickname"))
 		{
-			if (!arg || !arg[0] || !netLibrary) return;
+			if (!arg || !arg[0] || !netLibrary)
+			{
+				trace("Failed to set nickname\n");
+				return;
+			}
+
 			const char* text = netLibrary->GetPlayerName();
 			std::string newusername = ToNarrow(arg);
 
